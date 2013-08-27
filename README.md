@@ -5,7 +5,7 @@ Simple ansible module for handling PIDs.
 
 ## Overview
 
-This module reads a list of PID-files, concatenate them and saves the result in a fact. Null-strings in PID-files will be ignored.
+This module reads a list of PID-files, concatenates the contents and saves the result in a fact. Null-strings in PID-files will be ignored.
 
 ## Example
 
