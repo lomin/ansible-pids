@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+# (c) 2013, Steven Collins <happylomin@gmail.com>
+#
+# This module is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# See LICENCE for details.
+
+
+DOCUMENTATION = '''
+---
+module: pids
+short_description: Simple module for handlings PIDs.
+description:
+   - This module reads a list of PID-files, concatenate them
+     and saves the result in a fact. Null-strings in PID-files
+     will be ignored.
+        
+options: {}
+author: Steven Collins
+'''
+
+EXAMPLES = '''
+# Register PIDs in variable "var"
+ansible all -m pids -a "path=/usr/local/project/.pids/ pid_files='mon_1376871534954026565.pid mon_1376871534954026566.pid' register=var"
+'''
+
+import os.path
+
+def main():
+    module = AnsibleModule(
+        argument_spec = dict(
+            pid_files=dict(required=True),
+            path=dict(required=False, default=''),
+            register=(dict(required=False, default="pids")),
+        ),
+        supports_check_mode = True
+    )
+    register = module.params['register']
+    path = module.params['path']
+    pid_files = module.params['pid_files'].split() 
+    pids = ''
+    for pid_file in pid_files:
+        absolute_pid_file_path = path + pid_file
+        if os.path.isfile(absolute_pid_file_path):
+            f = open(absolute_pid_file_path, 'r')
+            for line in f:
+                pids += line.replace('\0', '')
+                pids += ' '
+    result = {
+                "changed" : pids != '',
+                "pid_files": pid_files,
+                "ansible_facts" : {
+                    register : pids.strip(),
+                }
+            }
+    module.exit_json(**result)
+
+# this is magic, see lib/ansible/module_common.py
+#<<INCLUDE_ANSIBLE_MODULE_COMMON>>
+main()
